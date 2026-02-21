@@ -7,6 +7,9 @@ from threading import Thread
 import schedule
 import time
 from datetime import datetime
+import logging  # Подключаем логирование
+
+logging.basicConfig(level=logging.INFO)  # Настраиваем уровень логирования
 
 load_dotenv()
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -47,6 +50,7 @@ def process_check_in_date(message):
         )
         bot.register_next_step_handler(input_data, lambda m: process_check_out_date(m, check_in_date))
     except ValueError:
+        logging.error(f"Некорректный формат даты въезда '{check_in_date}' от пользователя {message.from_user.username}")
         msg = bot.send_message(message.chat.id, "Ошибка: введите дату в формате ДД.ММ.ГГГГ.")
         bot.register_next_step_handler(msg, process_check_in_date)
 
@@ -61,6 +65,7 @@ def process_check_out_date(message, check_in_date):
         )
         bot.register_next_step_handler(input_data, lambda m: process_adults_count(m, check_in_date, check_out_date))
     except ValueError:
+        logging.error(f"Некорректный формат даты выезда '{check_out_date}' от пользователя {message.from_user.username}")
         msg = bot.send_message(message.chat.id, "Ошибка: введите дату в формате ДД.ММ.ГГГГ.")
         bot.register_next_step_handler(msg, lambda m: process_check_out_date(m, check_in_date))
 
@@ -74,7 +79,8 @@ def process_adults_count(message, check_in_date, check_out_date):
             f"К-во взрослых: {adults_count}\n\nВведите количество детей:"
         )
         bot.register_next_step_handler(input_data, lambda m: process_children_count(m, check_in_date, check_out_date, adults_count))
-    except ValueError:
+    except ValueError as e:
+        logging.error(f"Ошибка при вводе количества взрослых: {e.args[0]} ({message.text}) от пользователя {message.from_user.username}")
         msg = bot.send_message(message.chat.id, "Ошибка: введите целое неотрицательное число для взрослых.")
         bot.register_next_step_handler(msg, lambda m: process_adults_count(m, check_in_date, check_out_date))
 
@@ -98,7 +104,8 @@ def process_children_count(message, check_in_date, check_out_date, adults_count)
         result = check_availability(check_in_date, check_out_date, adults_count, children_count)
         bot.send_message(message.chat.id, result)
         
-    except ValueError:
+    except ValueError as e:
+        logging.error(f"Ошибка при вводе количества детей: {e.args[0]} ({message.text}) от пользователя {message.from_user.username}")
         msg = bot.send_message(message.chat.id, "Ошибка: введите целое неотрицательное число для детей.")
         bot.register_next_step_handler(msg, lambda m: process_children_count(m, check_in_date, check_out_date, adults_count))
 
@@ -109,6 +116,7 @@ def set_report_time(message):
         time_input = bot.send_message(message.chat.id, "Введите время отчёта (в формате ЧЧ:ММ):")
         bot.register_next_step_handler(time_input, process_report_time)
     except Exception as e:
+        logging.error(f"Ошибка при попытке установить время отчёта: {e.args[0]}")
         bot.send_message(message.chat.id, "Ошибка: попробуйте ещё раз.")
 
 def process_report_time(message):
@@ -121,6 +129,7 @@ def process_report_time(message):
         schedule.every().day.at(REPORT_TIME).do(send_daily_report)
         bot.send_message(message.chat.id, f"Ежедневный отчёт теперь будет отправляться в {REPORT_TIME}.")
     except ValueError:
+        logging.error(f"Некорректный формат времени отчёта '{report_time}' от пользователя {message.from_user.username}")
         msg = bot.send_message(message.chat.id, "Ошибка: введите время в формате ЧЧ:ММ.")
         bot.register_next_step_handler(msg, process_report_time)
 
