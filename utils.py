@@ -8,7 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from dotenv import load_dotenv
 from datetime import datetime
 import json
-from webdriver_manager.chrome import ChromeDriverManager  # <-- Импортируем менеджер драйверов
+from webdriver_manager.chrome import ChromeDriverManager  # Импорт менеджера драйверов
 
 load_dotenv()
 
@@ -19,8 +19,8 @@ def authenticate_user(user_password):
     return user_password == PASSWORD
 
 def check_availability(check_in_date, check_out_date, adults_count, children_count):
-    # AUTOINSTALL ChromeDriver нужной версии с помощью webdriver_manager
-    service = ChromeService(executable_path=ChromeDriverManager().install())
+    # УКАЗЫВАЕМ КОНКРЕТНУЮ РАБОЧУЮ ВЕРСИЮ ChromeDriver
+    service = ChromeService(executable_path=ChromeDriverManager(version="116.0.5845.96").install())
     options = webdriver.ChromeOptions()
     driver = webdriver.Chrome(service=service, options=options)
 
