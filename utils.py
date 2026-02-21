@@ -8,18 +8,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from dotenv import load_dotenv
 from datetime import datetime
 import json
+from webdriver_manager.chrome import ChromeDriverManager  # <-- Импортируем менеджер драйверов
 
 load_dotenv()
 
 PASSWORD = os.getenv('PASSWORD')
-CHROMEDRIVER_PATH = os.getenv('CHROMEDRIVER_PATH')
 ADMIN_CHAT_ID = os.getenv('ADMIN_CHAT_ID')
 
 def authenticate_user(user_password):
     return user_password == PASSWORD
 
 def check_availability(check_in_date, check_out_date, adults_count, children_count):
-    service = ChromeService(executable_path=CHROMEDRIVER_PATH)
+    # AUTOINSTALL ChromeDriver нужной версии с помощью webdriver_manager
+    service = ChromeService(executable_path=ChromeDriverManager().install())
     options = webdriver.ChromeOptions()
     driver = webdriver.Chrome(service=service, options=options)
 
@@ -73,7 +74,7 @@ def check_availability(check_in_date, check_out_date, adults_count, children_cou
             """
             responses.append(response)
         
-        return "\n\n".join(responses) if responses else "🚫 На данный момент свободных номеров нет."
+        return "\\n\\n".join(responses) if responses else "🚫 На данный момент свободных номеров нет."
     except Exception as e:
         error_msg = f"Произошла ошибка при обработке сайта: {str(e)}"
         bot.send_message(ADMIN_CHAT_ID, error_msg)  # Отправляем сообщение администратору
