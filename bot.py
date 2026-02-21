@@ -7,6 +7,7 @@ from threading import Thread
 import schedule
 import time
 from datetime import datetime
+import re  # Модуль для работы с регулярными выражениями
 import logging  # Подключаем логирование
 
 logging.basicConfig(level=logging.INFO)  # Настраиваем уровень логирования
@@ -70,8 +71,10 @@ def process_check_out_date(message, check_in_date):
         bot.register_next_step_handler(msg, lambda m: process_check_out_date(m, check_in_date))
 
 def process_adults_count(message, check_in_date, check_out_date):
+    raw_value = message.text.strip()
+    cleaned_value = re.sub(r'\D', '', raw_value)  # Удаляем любые нецифровые символы
     try:
-        adults_count = int(message.text.strip())
+        adults_count = int(cleaned_value)
         if adults_count < 0:
             raise ValueError("Количество взрослых не может быть отрицательным.")
         input_data = bot.send_message(
@@ -80,13 +83,15 @@ def process_adults_count(message, check_in_date, check_out_date):
         )
         bot.register_next_step_handler(input_data, lambda m: process_children_count(m, check_in_date, check_out_date, adults_count))
     except ValueError as e:
-        logging.error(f"Ошибка при вводе количества взрослых: {e.args[0]} ({message.text}) от пользователя {message.from_user.username}")
+        logging.error(f"Ошибка при вводе количества взрослых: {e.args[0]} ({raw_value}) от пользователя {message.from_user.username}")
         msg = bot.send_message(message.chat.id, "Ошибка: введите целое неотрицательное число для взрослых.")
         bot.register_next_step_handler(msg, lambda m: process_adults_count(m, check_in_date, check_out_date))
 
 def process_children_count(message, check_in_date, check_out_date, adults_count):
+    raw_value = message.text.strip()
+    cleaned_value = re.sub(r'\D', '', raw_value)  # Удаляем любые нецифровые символы
     try:
-        children_count = int(message.text.strip())
+        children_count = int(cleaned_value)
         if children_count < 0:
             raise ValueError("Количество детей не может быть отрицательным.")
         
@@ -105,7 +110,7 @@ def process_children_count(message, check_in_date, check_out_date, adults_count)
         bot.send_message(message.chat.id, result)
         
     except ValueError as e:
-        logging.error(f"Ошибка при вводе количества детей: {e.args[0]} ({message.text}) от пользователя {message.from_user.username}")
+        logging.error(f"Ошибка при вводе количества детей: {e.args[0]} ({raw_value}) от пользователя {message.from_user.username}")
         msg = bot.send_message(message.chat.id, "Ошибка: введите целое неотрицательное число для детей.")
         bot.register_next_step_handler(msg, lambda m: process_children_count(m, check_in_date, check_out_date, adults_count))
 
