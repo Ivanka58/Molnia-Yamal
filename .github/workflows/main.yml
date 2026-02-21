@@ -1,32 +1,36 @@
-name: Run Telegram Bot Periodically
+name: Deploy Telegram Bot
 
 on:
   schedule:
-    - cron: '0 */4 * * *'  # Каждую минуту с 0-й минуты каждого четвёртого часа
+    - cron: '0 */4 * * *' # Каждые 4 часа запуск
+  push:
+    branches:
+      - main # Также запускается при изменении в ветке main
 
 jobs:
-  run-bot:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      
-      # Устанавливаем Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-          
-      # Устанавливаем зависимости
-      - name: Install dependencies
-        run: |
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        if test -f requirements.txt; then
           pip install -r requirements.txt
-          
-      # Запускаем бота
-      - name: Start Telegram Bot
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          ADMIN_CHAT_ID: ${{ secrets.ADMIN_CHAT_ID }}
-          PASSWORD: ${{ secrets.PASSWORD }}
-          CHROMEDRIVER_PATH: "/usr/bin/chromedriver"
-        run: |
-          python bot.
+        fi
+
+    - name: Run the bot
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        ADMIN_CHAT_ID: ${{ secrets.ADMIN_CHAT_ID }}
+        PASSWORD: ${{ secrets.PASSWORD }}
+        CHROMEDRIVER_PATH: "/usr/bin/chromedriver"
+      run: |
+        python bot.py
