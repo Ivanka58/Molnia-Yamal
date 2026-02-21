@@ -67,15 +67,15 @@ def process_check_out_date(message, check_in_date):
 def process_adults_count(message, check_in_date, check_out_date):
     try:
         adults_count = int(message.text.strip())
-        if adults_count <= 0:
-            raise ValueError("Количество взрослых должно быть больше нуля.")
+        if adults_count < 0:
+            raise ValueError("Количество взрослых не может быть отрицательным.")
         input_data = bot.send_message(
             message.chat.id,
             f"К-во взрослых: {adults_count}\n\nВведите количество детей:"
         )
         bot.register_next_step_handler(input_data, lambda m: process_children_count(m, check_in_date, check_out_date, adults_count))
     except ValueError:
-        msg = bot.send_message(message.chat.id, "Ошибка: введите положительное целое число для взрослых.")
+        msg = bot.send_message(message.chat.id, "Ошибка: введите целое неотрицательное число для взрослых.")
         bot.register_next_step_handler(msg, lambda m: process_adults_count(m, check_in_date, check_out_date))
 
 def process_children_count(message, check_in_date, check_out_date, adults_count):
@@ -99,7 +99,7 @@ def process_children_count(message, check_in_date, check_out_date, adults_count)
         bot.send_message(message.chat.id, result)
         
     except ValueError:
-        msg = bot.send_message(message.chat.id, "Ошибка: введите неотрицательное целое число для детей.")
+        msg = bot.send_message(message.chat.id, "Ошибка: введите целое неотрицательное число для детей.")
         bot.register_next_step_handler(msg, lambda m: process_children_count(m, check_in_date, check_out_date, adults_count))
 
 # Команда для настройки времени отчёта
